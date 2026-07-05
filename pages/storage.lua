@@ -5,9 +5,6 @@ local Peripherals=Loader.load("lib.peripherals")
 local Renderer=Loader.load("lib.renderer")
 local Storage={}
 
-local cellText=Utils.formatNumber(stats.used).."/"..Utils.formatNumber(stats.bytes)
-local barW=math.max(4,rightW-18-#cellText)
-
 local ITEM_LIMIT=2147480000
 local FLUID_LIMIT=2147480000
 
@@ -117,6 +114,9 @@ function Storage.draw(area)
 
  Renderer.write(rightX,area.y+3,"ME Storage Stats",Theme.header)
  Renderer.hLine(rightX,area.y+4,rightW,Theme.border)
+
+ local cellText=Utils.formatNumber(stats.used).."/"..Utils.formatNumber(stats.bytes)
+ local barW=math.max(4,rightW-18-#cellText)
 
  Renderer.write(rightX,area.y+6,"Cell Bytes",Theme.muted)
  Renderer.write(rightX+12,area.y+6,Utils.bar(stats.used,stats.bytes,barW),Theme.good)
