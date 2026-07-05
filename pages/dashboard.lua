@@ -51,9 +51,10 @@ local function drawHome(w,h,ok,err)
 
  for i=1,math.min(5,#items) do
   local item=items[i]
-  local y=leftY+6+i
-  Renderer.write(leftX,y,tostring(i)..". "..Utils.truncate(item.displayName or item.name,28),Theme.text)
-  Renderer.write(leftX+34,y,Utils.padLeft(Utils.formatNumber(item.amount or 0),10),Theme.header)
+  local name=item.displayName or item.display_name or item.name or item.id or "Unknown"
+  local amount=tonumber(item.amount or item.count) or 0
+  Renderer.write(leftX,leftY+6+i,tostring(i)..". "..Utils.truncate(name,28),Theme.text)
+  Renderer.write(leftX+34,leftY+6+i,Utils.padLeft(Utils.formatNumber(amount),10),Theme.header)
  end
 
  Renderer.write(rightX,rightY,"System Status",Theme.header)
@@ -91,9 +92,7 @@ local function drawPlaceholder(title)
 end
 
 function Dashboard.render()
-
  local ok,err=Data.update()
-
 
  Renderer.begin()
 
