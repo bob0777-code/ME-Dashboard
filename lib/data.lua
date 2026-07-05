@@ -2,6 +2,8 @@ local Loader=dofile("loader.lua")
 local Peripherals=Loader.load("lib.peripherals")
 local Utils=Loader.load("lib.utils")
 
+Data.stats={}
+
 local Data={}
 Data.items={}
 Data.previous={}
@@ -88,6 +90,28 @@ function Data.update()
  Utils.sortByAmount(Data.items)
  Data.lastUpdate=os.epoch("utc")
 
+ Data.stats={}
+
+if Peripherals.me.getStoredEnergy then
+ local okEnergy,energy=pcall(function() return Peripherals.me.getStoredEnergy() end)
+ if okEnergy then Data.stats.energy=energy end
+end
+
+if Peripherals.me.getTotalItemStorage then
+ local okItems,itemStorage=pcall(function() return Peripherals.me.getTotalItemStorage() end)
+ if okItems then Data.stats.itemStorage=itemStorage end
+end
+
+if Peripherals.me.getTotalFluidStorage then
+ local okFluids,fluidStorage=pcall(function() return Peripherals.me.getTotalFluidStorage() end)
+ if okFluids then Data.stats.fluidStorage=fluidStorage end
+end
+
+if Peripherals.me.getCells then
+ local okCells,cells=pcall(function() return Peripherals.me.getCells() end)
+ if okCells then Data.stats.cells=cells end
+end
+ 
  return true,nil
 end
 
@@ -117,6 +141,10 @@ function Data.search(text)
   end
  end
  return result
+end
+
+function Data.getStats()
+ return Data.stats or {}
 end
 
 return Data
