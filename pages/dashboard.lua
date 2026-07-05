@@ -1,44 +1,46 @@
 local Loader=dofile("loader.lua")
+local Config=Loader.load("lib.config")
+local Theme=Loader.load("lib.theme")
+local Utils=Loader.load("lib.utils")
 local Data=Loader.load("lib.data")
 local Renderer=Loader.load("lib.renderer")
-local Utils=Loader.load("lib.utils")
-local Theme=Loader.load("lib.theme")
+local Table=Loader.load("widgets.table")
+
 local Dashboard={}
 
-function Dashboard.render()
-Data.update()
-Renderer.begin()
-
-local w,h=Renderer.getSize()
-local items=Data.getTopItems(10)
-
-Renderer.write(2,1,"Silicon Reach ME Dashboard",Theme.title)
-Renderer.write(2,2,"Items found: "..tostring(Data.getItemCount()),Theme.good)
-Renderer.write(2,3,"Top item test: "..tostring(items[1] and items[1].displayName or "NONE"),Theme.warning)
-Renderer.write(2,5,"Top Stored Items",Theme.text)
-
-Renderer.write(2,7,"#  Item",Theme.highlight)
-Renderer.write(55,7,"Amount",Theme.highlight)
-Renderer.write(68,7,"T",Theme.highlight)
-
-for i=1,math.min(10,#items) do
-local item=items[i]
-local y=7+i
-local name=Utils.truncate(item.displayName or item.name or "Unknown",45)
-local amount=Utils.formatNumber(item.amount or 0)
-local trend=item.trend or "="
-local trendColor=Theme.text
-
-if trend=="▲" then trendColor=Theme.good end
-if trend=="▼" then trendColor=Theme.bad end
-
-Renderer.write(2,y,Utils.padLeft(i..".",3),Theme.text)
-Renderer.write(6,y,Utils.padRight(name,45),Theme.text)
-Renderer.write(55,y,Utils.padLeft(amount,10),Theme.highlight)
-Renderer.write(68,y,trend,trendColor)
+local function drawHeader(w)
+ Renderer.center(2,Config.title,Theme.title)
+ Renderer.write(4,4,"Items found: "..tostring(Data.getItemCount()),Theme.good)
+ Renderer.write(w-18,4,"Time: "..Utils.time(),Theme.header)
+ Renderer.hLine(3,5,w-4,Theme.border)
 end
 
-Renderer.endFrame()
+local function drawFooter(w,h,ok,err)
+ Renderer.hLine(3,h-2,w-4,Theme.border)
+ if ok then
+  Renderer.write(4,h-1,"Status: Online",Theme.good)
+ else
+  Renderer.write(4,h-1,"Status: "..tostring(err),Theme.bad)
+ end
+ Renderer.write(w-25,h-1,"Refresh: 15s",Theme.muted)
+end
+
+function Dashboard.render()
+ local ok,err=Data.update()
+
+ Renderer.begin()
+
+ local w,h=Renderer.getSize()
+
+ Renderer.box(1,1,w,h,Theme.border)
+ drawHeader(w)
+
+ Renderer.write(4,7,"Top Stored Items",Theme.header)
+ Table.draw(4,9,w-8,math.min(14,h-12),Data.getTopItems(Config.topItems))
+
+ drawFooter(w,h,ok,err)
+
+ Renderer.endFrame()
 end
 
 return Dashboard
