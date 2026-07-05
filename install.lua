@@ -26,6 +26,7 @@ local files={
     "pages/storage.lua",
     "pages/dashboard.lua",
     "pages/colony.lua",
+    "pages/crafting.lua",
 
     "widgets/table.lua"
 }
