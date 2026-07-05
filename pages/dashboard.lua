@@ -7,6 +7,7 @@ local Renderer=Loader.load("lib.renderer")
 local Storage=Loader.load("pages.storage")
 local Colony=Loader.load("pages.colony")
 local Crafting=Loader.load("pages.crafting")
+local Search=Loader.load("pages.search")
 local Version=Loader.load("version")
 
 local Dashboard={}
@@ -86,6 +87,9 @@ local function drawHome(w,h,ok,err)
 
  Renderer.write(rightX,rightY+22,"Crafting",Theme.muted)
  Renderer.write(rightX+22,rightY+22,"Done",Theme.good)
+
+ Renderer.write(rightX,rightY+24,"Search",Theme.muted)
+ Renderer.write(rightX+22,rightY+24,"Done",Theme.good)
 end
 
 local function drawPlaceholder(title)
@@ -109,6 +113,10 @@ function Dashboard.render()
   Crafting.prepare()
  end
 
+ if currentPage=="search" then
+  Search.prepare()
+ end
+
  Renderer.begin()
 
  local w,h=Renderer.getSize()
@@ -123,7 +131,7 @@ function Dashboard.render()
  elseif currentPage=="crafting" then
   Crafting.draw({x=4,y=11,w=w-8,h=h-15})
  elseif currentPage=="search" then
-  drawPlaceholder("Search Page")
+  Search.draw({x=4,y=11,w=w-8,h=h-15})
  elseif currentPage=="settings" then
   drawPlaceholder("Settings Page")
  end
@@ -136,6 +144,11 @@ function Dashboard.render()
 end
 
 function Dashboard.handleEvent(event,a,b,c)
+ if currentPage=="search" then
+  local handled=Search.handleEvent(event,a,b,c)
+  if handled then return true end
+ end
+
  if event=="monitor_touch" then
   local x=b
   local y=c
