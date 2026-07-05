@@ -14,9 +14,15 @@ Data.lastUpdate = 0
 -- Private Functions
 --------------------------------------------------
 
-local function isFiltered(item)
+local function safeLower(str)
+    if type(str) ~= "string" then return "" end
+    return string.lower(str)
+end
 
-    local name = string.lower(item.name)
+local function isFiltered(item)
+    if type(item) ~= "table" then return true end
+
+    local name = safeLower(item.name)
 
     local filters = {
         "pattern",
@@ -38,35 +44,41 @@ local function isFiltered(item)
     end
 
     return false
+end
 
+local function normaliseItem(item)
+    if type(item) ~= "table" then return nil end
+
+    local name = item.name or item.id or "unknown"
+    local amount = tonumber(item.amount or item.count) or 0
+
+    return {
+        name = name,
+        displayName = item.displayName or name,
+        amount = amount
+    }
 end
 
 local function copyItem(item)
+    local name = item.name or "unknown"
+    local amount = item.amount or 0
 
-    local previous = Data.previous[item.name] or item.amount
+    local previous = Data.previous[name] or amount or 0
 
     local trend = "="
-
-    if item.amount > previous then
+    if amount > previous then
         trend = "▲"
-    elseif item.amount < previous then
+    elseif amount < previous then
         trend = "▼"
     end
 
     return {
-
-        name = item.name,
-
-        displayName = item.displayName or item.name,
-
-        amount = item.amount,
-
+        name = name,
+        displayName = item.displayName or name,
+        amount = amount,
         previous = previous,
-
         trend = trend
-
     }
-
 end
 
 --------------------------------------------------
@@ -75,102 +87,96 @@ end
 
 function Data.update()
 
-    if not Peripherals.me then
+    if not Peripherals or not Peripherals.me or type(Peripherals.me.getItems) ~= "function" then
         return false
     end
 
     Data.previous = {}
 
     for _, item in ipairs(Data.items) do
-
-        Data.previous[item.name] = item.amount
-
+        if item and item.name then
+            Data.previous[item.name] = item.amount or 0
+        end
     end
 
     Data.items = {}
-
     Data.lookup = {}
 
-    local items = Peripherals.me.getItems()
+    local rawItems = Peripherals.me.getItems()
 
-    for _, item in ipairs(items) do
+    if type(rawItems) ~= "table" then
+        rawItems = {}
+    end
 
-        if not isFiltered(item) then
+    for _, item in ipairs(rawItems) do
 
-            local newItem = copyItem(item)
+        local cleaned = normaliseItem(item)
+
+        if cleaned and not isFiltered(cleaned) then
+
+            local newItem = copyItem(cleaned)
 
             table.insert(Data.items, newItem)
-
             Data.lookup[newItem.name] = newItem
 
         end
 
     end
 
-    Utils.sortByAmount(Data.items)
+    if Utils and type(Utils.sortByAmount) == "function" then
+        Utils.sortByAmount(Data.items)
+    end
 
     Data.lastUpdate = os.epoch("utc")
 
     return true
-
 end
 
 function Data.getTopItems(limit)
-
     limit = limit or 10
 
     local results = {}
 
     for i = 1, math.min(limit, #Data.items) do
-
         results[i] = Data.items[i]
-
     end
 
     return results
-
 end
 
 function Data.getItem(name)
-
+    if type(name) ~= "string" then return nil end
     return Data.lookup[name]
-
 end
 
 function Data.search(text)
-
     local results = {}
 
-    text = string.lower(text)
+    if type(text) ~= "string" then return results end
+
+    text = safeLower(text)
 
     for _, item in ipairs(Data.items) do
+        if item then
+            local dn = safeLower(item.displayName)
+            local n = safeLower(item.name)
 
-        if string.find(string.lower(item.displayName), text, 1, true)
-
-        or string.find(string.lower(item.name), text, 1, true)
-
-        then
-
-            table.insert(results, item)
-
+            if string.find(dn, text, 1, true)
+            or string.find(n, text, 1, true) then
+                table.insert(results, item)
+            end
         end
-
     end
 
     return results
-
 end
 
 function Data.getItemCount()
-
     return #Data.items
-
 end
 
 function Data.getLastUpdate()
-
     return Data.lastUpdate
-
 end
 
 return Data
