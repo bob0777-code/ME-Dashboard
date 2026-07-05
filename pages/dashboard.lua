@@ -13,7 +13,7 @@ Renderer.write(2,1,"Silicon Reach ME Dashboard",Theme.title)
 Renderer.write(2,2,"Items found: "..tostring(Data.getItemCount()),Theme.good)
 Renderer.write(2,3,"Updated: "..Utils.currentTime(),Theme.highlight)
 Renderer.write(2,5,"Top Stored Items",Theme.text)
-TableWidget.draw(2,7,w-4,math.min(10,h-8),Data.getTopItems(10))
+TableWidget.draw(2,7,w-4,11,Data.getTopItems(10))
 Renderer.endFrame()
 end
 return Dashboard
