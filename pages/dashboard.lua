@@ -7,7 +7,6 @@ local Renderer=Loader.load("lib.renderer")
 local Storage=Loader.load("pages.storage")
 local Colony=Loader.load("pages.colony")
 local Crafting=Loader.load("pages.crafting")
-local Search=Loader.load("pages.search")
 local Version=Loader.load("version")
 
 local Dashboard={}
