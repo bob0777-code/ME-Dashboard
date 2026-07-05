@@ -91,8 +91,13 @@ local function drawPlaceholder(title)
 end
 
 function Dashboard.render()
+
  local ok,err=Data.update()
- if currentPage=="storage" then Storage.prepare() end
+
+ if currentPage=="storage" then
+  Storage.prepare()
+ end
+
  Renderer.begin()
 
  local w,h=Renderer.getSize()
