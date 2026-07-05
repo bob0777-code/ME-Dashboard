@@ -1,6 +1,6 @@
-local Loader = {}
+local Loader={}
 
-local cache = {}
+local cache={}
 
 function Loader.load(path)
 
@@ -8,25 +8,17 @@ function Loader.load(path)
         return cache[path]
     end
 
-    local file = fs.open(path:gsub("%.","/")..".lua","r")
+    local filename=path:gsub("%.","/")..".lua"
 
-    if not file then
-        error("Cannot load "..path)
-    end
-
-    local source = file.readAll()
-
-    file.close()
-
-    local fn, err = load(source,"@"..path)
+    local fn,err=loadfile(filename)
 
     if not fn then
         error(err)
     end
 
-    local module = fn()
+    local module=fn()
 
-    cache[path] = module
+    cache[path]=module
 
     return module
 
