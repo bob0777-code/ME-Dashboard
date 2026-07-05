@@ -1,19 +1,22 @@
 local Stats={}
-
+local function call(me,name)
+ if not me or type(me[name])~="function" then return nil end
+ local ok,result=pcall(function() return me[name]() end)
+ if ok then return result end
+ local ok2,result2=pcall(function() return me[name](me) end)
+ if ok2 then return result2 end
+ return nil
+end
 function Stats.update(me)
- local stats={energy=0,itemCapacity=0,fluidCapacity=0,cellCount=0,cellBytes=0,cellUsedBytes=0}
-
- local okEnergy,energy=pcall(function() return me.getStoredEnergy() end)
- if okEnergy then stats.energy=tonumber(energy) or 0 end
-
- local okItems,items=pcall(function() return me.getTotalItemStorage() end)
- if okItems then stats.itemCapacity=tonumber(items) or 0 end
-
- local okFluids,fluids=pcall(function() return me.getTotalFluidStorage() end)
- if okFluids then stats.fluidCapacity=tonumber(fluids) or 0 end
-
- local okCells,cells=pcall(function() return me.getCells() end)
- if okCells and type(cells)=="table" then
+ local stats={}
+ stats.energy=tonumber(call(me,"getStoredEnergy")) or 0
+ stats.itemCapacity=tonumber(call(me,"getTotalItemStorage")) or 0
+ stats.fluidCapacity=tonumber(call(me,"getTotalFluidStorage")) or 0
+ stats.cellCount=0
+ stats.cellBytes=0
+ stats.cellUsedBytes=0
+ local cells=call(me,"getCells")
+ if type(cells)=="table" then
   stats.cellCount=#cells
   for _,cell in ipairs(cells) do
    if type(cell)=="table" then
@@ -22,8 +25,6 @@ function Stats.update(me)
    end
   end
  end
-
  return stats
 end
-
 return Stats
