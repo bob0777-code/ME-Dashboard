@@ -1,182 +1,122 @@
-local Loader = dofile("loader.lua")
+local Loader=dofile("loader.lua")
+local Peripherals=Loader.load("lib.peripherals")
+local Utils=Loader.load("lib.utils")
 
-local Peripherals = Loader.load("lib.peripherals")
-local Utils = Loader.load("lib.utils")
+local Data={}
+Data.items={}
+Data.previous={}
+Data.lookup={}
+Data.lastUpdate=0
 
-local Data = {}
-
-Data.items = {}
-Data.lookup = {}
-Data.previous = {}
-Data.lastUpdate = 0
-
---------------------------------------------------
--- Private Functions
---------------------------------------------------
-
-local function safeLower(str)
-    if type(str) ~= "string" then return "" end
-    return string.lower(str)
-end
-
-local function isFiltered(item)
-    if type(item) ~= "table" then return true end
-
-    local name = safeLower(item.name)
-
-    local filters = {
-        "pattern",
-        "terminal",
-        "storage_cell",
-        "storage_component",
-        "spatial",
-        "facade",
-        "cable",
-        "drive",
-        "p2p",
-        "memory_card"
-    }
-
-    for _, filter in ipairs(filters) do
-        if string.find(name, filter, 1, true) then
-            return true
-        end
-    end
-
-    return false
+local function safeLower(value)
+ if type(value)~="string" then return "" end
+ return string.lower(value)
 end
 
 local function normaliseItem(item)
-    if type(item) ~= "table" then return nil end
-
-    local name = item.name or item.id or "unknown"
-    local amount = tonumber(item.amount or item.count) or 0
-
-    return {
-        name = name,
-        displayName = item.displayName or name,
-        amount = amount
-    }
+ if type(item)~="table" then return nil end
+ local name=item.name or item.id or "unknown"
+ local amount=tonumber(item.amount or item.count) or 0
+ local displayName=item.displayName or item.display_name or name
+ return {name=name,displayName=displayName,amount=amount}
 end
 
-local function copyItem(item)
-    local name = item.name or "unknown"
-    local amount = item.amount or 0
-
-    local previous = Data.previous[name] or amount or 0
-
-    local trend = "="
-    if amount > previous then
-        trend = "▲"
-    elseif amount < previous then
-        trend = "▼"
-    end
-
-    return {
-        name = name,
-        displayName = item.displayName or name,
-        amount = amount,
-        previous = previous,
-        trend = trend
-    }
+local function isFiltered(item)
+ local name=safeLower(item.name)
+ local filters={
+  "pattern",
+  "terminal",
+  "storage_cell",
+  "storage_component",
+  "spatial",
+  "facade",
+  "cable",
+  "drive",
+  "p2p",
+  "memory_card"
+ }
+ for _,filter in ipairs(filters) do
+  if string.find(name,filter,1,true) then return true end
+ end
+ return false
 end
 
---------------------------------------------------
--- Public Functions
---------------------------------------------------
+local function addTrend(item)
+ local previous=Data.previous[item.name] or item.amount
+ local trend="="
+ if item.amount>previous then trend="▲" end
+ if item.amount<previous then trend="▼" end
+ item.previous=previous
+ item.trend=trend
+ return item
+end
 
 function Data.update()
+ Peripherals.refresh()
 
-    if not Peripherals or not Peripherals.me or type(Peripherals.me.getItems) ~= "function" then
-        return false
-    end
+ if not Peripherals.me or type(Peripherals.me.getItems)~="function" then
+  return false,"ME bridge missing getItems()"
+ end
 
-    Data.previous = {}
+ Data.previous={}
+ for _,item in ipairs(Data.items) do
+  if item.name then Data.previous[item.name]=item.amount or 0 end
+ end
 
-    for _, item in ipairs(Data.items) do
-        if item and item.name then
-            Data.previous[item.name] = item.amount or 0
-        end
-    end
+ Data.items={}
+ Data.lookup={}
 
-    Data.items = {}
-    Data.lookup = {}
+ local ok,raw=pcall(function()
+  return Peripherals.me.getItems()
+ end)
 
-    local rawItems = Peripherals.me.getItems()
+ if not ok then
+  return false,raw
+ end
 
-    if type(rawItems) ~= "table" then
-        rawItems = {}
-    end
+ if type(raw)~="table" then raw={} end
 
-    for _, item in ipairs(rawItems) do
+ for _,rawItem in ipairs(raw) do
+  local item=normaliseItem(rawItem)
+  if item and not isFiltered(item) then
+   item=addTrend(item)
+   table.insert(Data.items,item)
+   Data.lookup[item.name]=item
+  end
+ end
 
-        local cleaned = normaliseItem(item)
+ Utils.sortByAmount(Data.items)
+ Data.lastUpdate=os.epoch("utc")
 
-        if cleaned and not isFiltered(cleaned) then
-
-            local newItem = copyItem(cleaned)
-
-            table.insert(Data.items, newItem)
-            Data.lookup[newItem.name] = newItem
-
-        end
-
-    end
-
-    if Utils and type(Utils.sortByAmount) == "function" then
-        Utils.sortByAmount(Data.items)
-    end
-
-    Data.lastUpdate = os.epoch("utc")
-
-    return true
+ return true,nil
 end
 
 function Data.getTopItems(limit)
-    limit = limit or 10
-
-    local results = {}
-
-    for i = 1, math.min(limit, #Data.items) do
-        results[i] = Data.items[i]
-    end
-
-    return results
-end
-
-function Data.getItem(name)
-    if type(name) ~= "string" then return nil end
-    return Data.lookup[name]
-end
-
-function Data.search(text)
-    local results = {}
-
-    if type(text) ~= "string" then return results end
-
-    text = safeLower(text)
-
-    for _, item in ipairs(Data.items) do
-        if item then
-            local dn = safeLower(item.displayName)
-            local n = safeLower(item.name)
-
-            if string.find(dn, text, 1, true)
-            or string.find(n, text, 1, true) then
-                table.insert(results, item)
-            end
-        end
-    end
-
-    return results
+ local result={}
+ limit=limit or 10
+ for i=1,math.min(limit,#Data.items) do
+  result[i]=Data.items[i]
+ end
+ return result
 end
 
 function Data.getItemCount()
-    return #Data.items
+ return #Data.items
 end
 
 function Data.getLastUpdate()
-    return Data.lastUpdate
+ return Data.lastUpdate
+end
+
+function Data.search(text)
+ local result={}
+ text=safeLower(text)
+ for _,item in ipairs(Data.items) do
+  if string.find(safeLower(item.name),text,1,true) or string.find(safeLower(item.displayName),text,1,true) then
+   table.insert(result,item)
+  end
+ end
+ return result
 end
 
 return Data
