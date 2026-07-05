@@ -91,7 +91,7 @@ function Data.update()
 
     Data.lookup = {}
 
-    local items = Peripherals.me.listItems()
+    local items = Peripherals.me.getItems()
 
     for _, item in ipairs(items) do
 
