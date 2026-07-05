@@ -19,6 +19,7 @@ end
 function Storage.draw(area)
  local items=Data.getTopItems(20)
  local stats=Data.getStats()
+ Renderer.write(area.x,area.y+2,"DEBUG energy="..tostring(stats.energy).." itemCap="..tostring(stats.itemCapacity).." fluidCap="..tostring(stats.fluidCapacity).." bytes="..tostring(stats.cellBytes).." used="..tostring(stats.cellUsedBytes),Theme.warning)
 
  Renderer.write(area.x,area.y,"Storage Page",Theme.header)
  Renderer.hLine(area.x,area.y+1,area.w,Theme.border)
