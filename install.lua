@@ -3,7 +3,7 @@ local files = {
     "startup.lua",
     "loader.lua",
     "version.lua",
-
+    "lib/layout.lua",
     "lib/config.lua",
     "lib/theme.lua",
     "lib/peripherals.lua",
