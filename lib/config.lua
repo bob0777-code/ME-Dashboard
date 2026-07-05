@@ -1,15 +1,11 @@
-local Config = {}
+local Config={}
 
-Config.title = "Silicon Reach"
+Config.title="Silicon Reach"
 
-Config.refreshRate = 2
+Config.refreshRate=15
 
-Config.topItems = 10
+Config.textScale=0.5
 
-Config.rotatePages = true
-
-Config.pageTime = 10
-
-Config.monitorScale = 0.5
+Config.topItems=10
 
 return Config
