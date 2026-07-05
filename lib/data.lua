@@ -3,7 +3,6 @@ local Peripherals=Loader.load("lib.peripherals")
 local Utils=Loader.load("lib.utils")
 
 local Data={}
-
 Data.items={}
 Data.previous={}
 Data.lookup={}
@@ -25,10 +24,7 @@ end
 
 local function isFiltered(item)
  local name=safeLower(item.name)
- local filters={
-  "pattern","terminal","storage_cell","storage_component",
-  "spatial","facade","cable","drive","p2p","memory_card"
- }
+ local filters={"pattern","terminal","storage_cell","storage_component","spatial","facade","cable","drive","p2p","memory_card"}
  for _,filter in ipairs(filters) do
   if string.find(name,filter,1,true) then return true end
  end
@@ -46,32 +42,31 @@ local function addTrend(item)
 end
 
 local function safeCall(fn)
- if type(fn)~="function" then return nil end
  local ok,result=pcall(fn)
  if ok then return result end
  return nil
 end
 
 local function updateStats()
- Data.stats={}
+ Data.stats={energy=0,itemCapacity=0,fluidCapacity=0,cellBytes=0,cellUsedBytes=0,cellCount=0}
 
  if not Peripherals.me then return end
 
- Data.stats.energy=safeCall(function()
-  return Peripherals.me.getStoredEnergy()
- end)
+ Data.stats.energy=safeCall(function() return Peripherals.me.getStoredEnergy() end) or 0
+ Data.stats.itemCapacity=safeCall(function() return Peripherals.me.getTotalItemStorage() end) or 0
+ Data.stats.fluidCapacity=safeCall(function() return Peripherals.me.getTotalFluidStorage() end) or 0
 
- Data.stats.itemStorage=safeCall(function()
-  return Peripherals.me.getTotalItemStorage()
- end)
+ local cells=safeCall(function() return Peripherals.me.getCells() end)
 
- Data.stats.fluidStorage=safeCall(function()
-  return Peripherals.me.getTotalFluidStorage()
- end)
-
- Data.stats.cells=safeCall(function()
-  return Peripherals.me.getCells()
- end)
+ if type(cells)=="table" then
+  Data.stats.cellCount=#cells
+  for _,cell in ipairs(cells) do
+   if type(cell)=="table" then
+    Data.stats.cellBytes=Data.stats.cellBytes+(tonumber(cell.bytes) or 0)
+    Data.stats.cellUsedBytes=Data.stats.cellUsedBytes+(tonumber(cell.usedBytes) or 0)
+   end
+  end
+ end
 end
 
 function Data.update()
@@ -89,14 +84,8 @@ function Data.update()
  Data.items={}
  Data.lookup={}
 
- local ok,raw=pcall(function()
-  return Peripherals.me.getItems()
- end)
-
- if not ok then
-  return false,raw
- end
-
+ local ok,raw=pcall(function() return Peripherals.me.getItems() end)
+ if not ok then return false,raw end
  if type(raw)~="table" then raw={} end
 
  for _,rawItem in ipairs(raw) do
@@ -118,23 +107,13 @@ end
 function Data.getTopItems(limit)
  local result={}
  limit=limit or 10
- for i=1,math.min(limit,#Data.items) do
-  result[i]=Data.items[i]
- end
+ for i=1,math.min(limit,#Data.items) do result[i]=Data.items[i] end
  return result
 end
 
-function Data.getItemCount()
- return #Data.items
-end
-
-function Data.getLastUpdate()
- return Data.lastUpdate
-end
-
-function Data.getStats()
- return Data.stats or {}
-end
+function Data.getItemCount() return #Data.items end
+function Data.getLastUpdate() return Data.lastUpdate end
+function Data.getStats() return Data.stats or {} end
 
 function Data.search(text)
  local result={}
