@@ -90,18 +90,20 @@ function Storage.draw(area)
  Renderer.write(rightX,area.y+3,"ME Storage Stats",Theme.header)
  Renderer.hLine(rightX,area.y+4,rightW,Theme.border)
 
+ local barW=math.max(5,math.min(10,rightW-34))
+
  Renderer.write(rightX,area.y+6,"Cell Bytes",Theme.muted)
- Renderer.write(rightX+16,area.y+6,Utils.bar(stats.used,stats.bytes,20),Theme.good)
- Renderer.write(rightX+38,area.y+6,Utils.formatNumber(stats.used).."/"..Utils.formatNumber(stats.bytes),Theme.header)
+ Renderer.write(rightX+16,area.y+6,Utils.bar(stats.used,stats.bytes,barW),Theme.good)
+ Renderer.write(rightX+18+barW,area.y+6,Utils.formatNumber(stats.used).."/"..Utils.formatNumber(stats.bytes),Theme.header)
 
  Renderer.write(rightX,area.y+8,"Storage Cells",Theme.muted)
  Renderer.write(rightX+16,area.y+8,tostring(stats.cells),Theme.good)
 
  Renderer.write(rightX,area.y+10,"Item Capacity",Theme.muted)
- Renderer.write(rightX+16,area.y+10,Utils.formatNumber(stats.itemCap),Theme.header)
+ Renderer.write(rightX+16,area.y+10,Utils.formatNumber(stats.used).."/"..Utils.formatNumber(stats.itemCap),Theme.header)
 
  Renderer.write(rightX,area.y+12,"Fluid Capacity",Theme.muted)
- Renderer.write(rightX+16,area.y+12,Utils.formatNumber(stats.fluidCap),Theme.header)
+ Renderer.write(rightX+16,area.y+12,"0/"..Utils.formatNumber(stats.fluidCap),Theme.header)
 
  Renderer.write(rightX,area.y+14,"Stored Energy",Theme.muted)
  Renderer.write(rightX+16,area.y+14,Utils.formatNumber(stats.energy),Theme.header)
