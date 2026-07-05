@@ -19,6 +19,7 @@ local files={
  "lib/utils.lua",
  "lib/data.lua",
  "lib/data_items.lua",
+ "lib/data_fluids.lua",
  "lib/data_stats.lua",
  "lib/renderer.lua",
  "lib/layout.lua",
