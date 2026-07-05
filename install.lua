@@ -1,34 +1,34 @@
 local BASE="https://raw.githubusercontent.com/bob0777-code/ME-Dashboard/main/"
 
 local folders={
-    "lib",
-    "pages",
-    "widgets",
-    "assets"
+ "lib",
+ "pages",
+ "widgets",
+ "assets"
 }
 
 local files={
-    "loader.lua",
-    "main.lua",
-    "startup.lua",
-    "version.lua",
+ "loader.lua",
+ "main.lua",
+ "startup.lua",
+ "version.lua",
 
-    "lib/config.lua",
-    "lib/theme.lua",
-    "lib/peripherals.lua",
-    "lib/utils.lua",
-    "lib/data.lua",
-    "lib/renderer.lua",
-    "lib/layout.lua",
-    "lib/data_items.lua",
-    "lib/data_stats.lua",
-    
-    "pages/storage.lua",
-    "pages/dashboard.lua",
-    "pages/colony.lua",
-    "pages/crafting.lua",
+ "lib/config.lua",
+ "lib/theme.lua",
+ "lib/peripherals.lua",
+ "lib/utils.lua",
+ "lib/data.lua",
+ "lib/data_items.lua",
+ "lib/data_stats.lua",
+ "lib/renderer.lua",
+ "lib/layout.lua",
 
-    "widgets/table.lua"
+ "pages/dashboard.lua",
+ "pages/storage.lua",
+ "pages/colony.lua",
+ "pages/crafting.lua",
+
+ "widgets/table.lua"
 }
 
 print("===================================")
@@ -37,37 +37,39 @@ print("===================================")
 print("")
 
 for _,folder in ipairs(folders) do
-    if not fs.exists(folder) then
-        fs.makeDir(folder)
-    end
+ if not fs.exists(folder) then
+  fs.makeDir(folder)
+ end
 end
 
 for _,file in ipairs(files) do
+ print("Downloading "..file)
 
-    print("Downloading "..file)
+ if fs.exists(file) then
+  fs.delete(file)
+ end
 
-    if fs.exists(file) then
-        fs.delete(file)
-    end
+ local response=http.get(BASE..file)
 
-    local response=http.get(BASE..file)
+ if not response then
+  error("Failed to download "..file)
+ end
 
-    if not response then
-        error("Failed to download "..file)
-    end
+ local text=response.readAll()
+ response.close()
 
-    local text=response.readAll()
-    response.close()
+ local f=fs.open(file,"w")
 
-    local f=fs.open(file,"w")
+ if not f then
+  error("Couldn't write "..file)
+ end
 
-    if not f then
-        error("Couldn't write "..file)
-    end
+ f.write(text)
+ f.close()
+end
 
-    f.write(text)
-    f.close()
-
+if fs.exists("pages/search.lua") then
+ fs.delete("pages/search.lua")
 end
 
 print("")
