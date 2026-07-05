@@ -111,7 +111,7 @@ function Storage.draw(area)
  Renderer.write(rightX+16,area.y+10,Utils.formatNumber(stats.used).."/"..Utils.formatNumber(stats.itemCap),Theme.header)
 
  Renderer.write(rightX,area.y+12,"Fluid Capacity",Theme.muted)
- Renderer.write(rightX+16,area.y+12,Utils.formatNumber(stats.fluidUsed or 0).."/"..Utils.formatNumber(stats.fluidCap),Theme.header)
+ Renderer.write(rightX+16,area.y+12,Utils.formatNumber((stats.fluidUsed or 0)/1000000).."/"..Utils.formatNumber((stats.fluidCap or 0)/1000000).."B",Theme.header)
 
  Renderer.write(rightX,area.y+14,"Stored Energy",Theme.muted)
  Renderer.write(rightX+16,area.y+14,Utils.formatNumber(stats.energy),Theme.header)
