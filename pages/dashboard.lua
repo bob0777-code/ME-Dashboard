@@ -9,7 +9,7 @@ local Layout=Loader.load("lib.layout")
 local Dashboard={}
 
 local function drawHeader(w)
- Renderer.center(2,"Kingdom of Silicon Reach",Theme.title)
+ Renderer.center(2,Config.getTitle(),Theme.title)
  Renderer.center(3,"Applied Energistics Control Center",Theme.header)
  Renderer.hLine(3,5,w-4,Theme.border)
 end
