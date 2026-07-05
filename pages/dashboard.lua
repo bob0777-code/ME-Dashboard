@@ -5,6 +5,8 @@ local Utils=Loader.load("lib.utils")
 local Data=Loader.load("lib.data")
 local Renderer=Loader.load("lib.renderer")
 local Storage=Loader.load("pages.storage")
+local Version=Loader.load("version")
+local Colony=Loader.load("pages.colony")
 
 local Dashboard={}
 local currentPage="home"
@@ -108,7 +110,7 @@ function Dashboard.render()
  elseif currentPage=="storage" then
   Storage.draw({x=4,y=11,w=w-8,h=h-15})
  elseif currentPage=="colony" then
-  drawPlaceholder("Colony Page")
+  Colony.draw({x=4,y=11,w=w-8,h=h-15})
  elseif currentPage=="crafting" then
   drawPlaceholder("Crafting Page")
  elseif currentPage=="search" then
@@ -119,7 +121,7 @@ function Dashboard.render()
 
  Renderer.hLine(3,h-2,w-4,Theme.border)
  Renderer.write(4,h-1,"Current Page: "..currentPage,Theme.good)
- Renderer.write(w-25,h-1,"Refresh: "..tostring(Config.refreshRate).."s",Theme.muted)
+ Renderer.write(w-35,h-1,"v"..Version.version.." | Refresh: "..tostring(Config.refreshRate).."s",Theme.muted)
 
  Renderer.endFrame()
 end
