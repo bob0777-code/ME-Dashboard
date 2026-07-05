@@ -94,9 +94,6 @@ function Dashboard.render()
 
  local ok,err=Data.update()
 
- if currentPage=="storage" then
-  Storage.prepare()
- end
 
  Renderer.begin()
 
