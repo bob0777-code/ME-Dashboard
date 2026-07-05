@@ -42,7 +42,8 @@ local function drawHome(w,h,ok,err)
  local rightX=58
  local rightY=11
  local rightW=w-rightX-4
- local items=Data.getTopItems(5)
+ local maxItems=Config.topItems or 10
+ local items=Data.getTopItems(maxItems)
 
  Renderer.write(leftX,leftY,"Storage Overview",Theme.header)
  Renderer.hLine(leftX,leftY+1,leftW,Theme.border)
@@ -52,7 +53,7 @@ local function drawHome(w,h,ok,err)
 
  Renderer.write(leftX,leftY+5,"Top Items",Theme.muted)
 
- for i=1,math.min(5,#items) do
+ for i=1,math.min(maxItems,#items) do
   local item=items[i]
   local name=item.displayName or item.display_name or item.name or item.id or "Unknown"
   local amount=tonumber(item.amount or item.count) or 0
@@ -71,24 +72,6 @@ local function drawHome(w,h,ok,err)
 
  Renderer.write(rightX,rightY+7,"Current Time",Theme.muted)
  Renderer.write(rightX+20,rightY+7,Utils.time(),Theme.header)
-
- Renderer.write(rightX,rightY+13,"Page Progress",Theme.header)
- Renderer.hLine(rightX,rightY+14,rightW,Theme.border)
-
- Renderer.write(rightX,rightY+16,"Home",Theme.muted)
- Renderer.write(rightX+22,rightY+16,"Done",Theme.good)
-
- Renderer.write(rightX,rightY+18,"Storage",Theme.muted)
- Renderer.write(rightX+22,rightY+18,"Done",Theme.good)
-
- Renderer.write(rightX,rightY+20,"Colony",Theme.muted)
- Renderer.write(rightX+22,rightY+20,"Done",Theme.good)
-
- Renderer.write(rightX,rightY+22,"Crafting",Theme.muted)
- Renderer.write(rightX+22,rightY+22,"Done",Theme.good)
-
- Renderer.write(rightX,rightY+24,"Energy",Theme.muted)
- Renderer.write(rightX+22,rightY+24,"Next",Theme.warning)
 end
 
 local function drawPlaceholder(title)
