@@ -1,1 +1,1 @@
-
+shell.run("main.lua")
