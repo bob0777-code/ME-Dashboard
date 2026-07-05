@@ -1,0 +1,18 @@
+Utils.formatNumber(1523)        --> "1.5K"
+Utils.formatTime()              --> "18:42:11"
+Utils.center(text, width)
+Utils.padRight(text, width)
+Utils.padLeft(text, width)
+Utils.truncate(text, width)
+Utils.progressBar(value, max, width)
+Utils.clamp(value, min, max)
+Utils.round(number, decimals)
+Utils.copy(table)
+Utils.deepCopy(table)
+Utils.merge(tableA, tableB)
+Utils.sortByAmount(items)
+Utils.filter(items, fn)
+Utils.find(items, fn)
+Utils.split(str, sep)
+Utils.startsWith(str, prefix)
+Utils.endsWith(str, suffix)
