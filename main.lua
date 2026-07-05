@@ -15,15 +15,33 @@ local function showError(err)
  Renderer.endFrame()
 end
 
-while true do
+local function render()
  local ok,err=pcall(function()
   Dashboard.render()
  end)
 
  if not ok then
   showError(err)
-  sleep(5)
+ end
+end
+
+render()
+
+local timer=os.startTimer(Config.refreshRate or 15)
+
+while true do
+ local event,a,b,c=os.pullEvent()
+
+ if event=="timer" and a==timer then
+  render()
+  timer=os.startTimer(Config.refreshRate or 15)
  else
-  sleep(Config.refreshRate or 15)
+  local ok,changed=pcall(function()
+   return Dashboard.handleEvent(event,a,b,c)
+  end)
+
+  if ok and changed then
+   render()
+  end
  end
 end
