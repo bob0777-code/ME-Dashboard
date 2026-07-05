@@ -8,56 +8,74 @@ local Layout=Loader.load("lib.layout")
 
 local Dashboard={}
 
-local function drawTopItems(area,items)
- Renderer.write(area.x,area.y,"Top Stored Items",Theme.header)
- Renderer.hLine(area.x,area.y+1,area.w,Theme.border)
+local function drawHeader(w)
+ Renderer.center(2,"Kingdom of Silicon Reach",Theme.title)
+ Renderer.center(3,"Applied Energistics Control Center",Theme.header)
+ Renderer.hLine(3,5,w-4,Theme.border)
+end
 
- Renderer.write(area.x,area.y+3,"#",Theme.header)
- Renderer.write(area.x+5,area.y+3,"Item",Theme.header)
- Renderer.write(area.x+area.w-18,area.y+3,"Amount",Theme.header)
- Renderer.write(area.x+area.w-3,area.y+3,"T",Theme.header)
+local function drawNav(w)
+ local y=7
+ local buttons={"[ Home ]","[ Storage ]","[ Colony ]","[ Crafting ]","[ Search ]","[ Settings ]"}
+ local x=4
+ for _,b in ipairs(buttons) do
+  Renderer.write(x,y,b,Theme.header)
+  x=x+#b+3
+ end
+ Renderer.hLine(3,9,w-4,Theme.border)
+end
 
- local nameWidth=area.w-28
+local function drawStorageSummary(x,y,w)
+ local items=Data.getTopItems(5)
 
- for i=1,math.min(10,#items) do
+ Renderer.write(x,y,"Storage Overview",Theme.header)
+ Renderer.hLine(x,y+1,w,Theme.border)
+
+ Renderer.write(x,y+3,"Unique Items",Theme.muted)
+ Renderer.write(x+18,y+3,tostring(Data.getItemCount()),Theme.good)
+
+ Renderer.write(x,y+5,"Top Items",Theme.muted)
+
+ for i=1,math.min(5,#items) do
   local item=items[i]
-  local y=area.y+4+i
-  local name=Utils.truncate(item.displayName or item.name or "Unknown",nameWidth)
-  local amount=Utils.formatNumber(item.amount or 0)
-  local trend=item.trend or "="
-  local trendColor=Theme.text
-
-  if trend=="▲" then trendColor=Theme.good end
-  if trend=="▼" then trendColor=Theme.bad end
-
-  Renderer.write(area.x,y,Utils.padLeft(i..".",3),Theme.text)
-  Renderer.write(area.x+5,y,Utils.padRight(name,nameWidth),Theme.text)
-  Renderer.write(area.x+area.w-20,y,Utils.padLeft(amount,10),Theme.header)
-  Renderer.write(area.x+area.w-3,y,trend,trendColor)
+  Renderer.write(x,y+6+i,tostring(i)..". "..Utils.truncate(item.displayName or item.name,28),Theme.text)
+  Renderer.write(x+w-12,y+6+i,Utils.padLeft(Utils.formatNumber(item.amount),10),Theme.header)
  end
 end
 
-local function drawStats(area,ok,err)
- Renderer.write(area.x,area.y,"System Stats",Theme.header)
- Renderer.hLine(area.x,area.y+1,area.w,Theme.border)
+local function drawSystemSummary(x,y,w,ok,err)
+ Renderer.write(x,y,"System Status",Theme.header)
+ Renderer.hLine(x,y+1,w,Theme.border)
 
- Renderer.write(area.x,area.y+3,"ME Items",Theme.muted)
- Renderer.write(area.x+18,area.y+3,tostring(Data.getItemCount()),Theme.good)
+ Renderer.write(x,y+3,"ME Bridge",Theme.muted)
+ Renderer.write(x+18,y+3,ok and "Online" or "Error",ok and Theme.good or Theme.bad)
 
- Renderer.write(area.x,area.y+5,"Status",Theme.muted)
+ Renderer.write(x,y+5,"Refresh Rate",Theme.muted)
+ Renderer.write(x+18,y+5,tostring(Config.refreshRate).."s",Theme.header)
 
- if ok then
-  Renderer.write(area.x+18,area.y+5,"Online",Theme.good)
- else
-  Renderer.write(area.x+18,area.y+5,"Error",Theme.bad)
-  Renderer.write(area.x,area.y+7,Utils.truncate(tostring(err),area.w),Theme.bad)
+ Renderer.write(x,y+7,"Current Time",Theme.muted)
+ Renderer.write(x+18,y+7,Utils.time(),Theme.header)
+
+ if not ok then
+  Renderer.write(x,y+10,Utils.truncate(tostring(err),w),Theme.bad)
  end
+end
 
- Renderer.write(area.x,area.y+9,"Refresh",Theme.muted)
- Renderer.write(area.x+18,area.y+9,tostring(Config.refreshRate).."s",Theme.header)
+local function drawFuturePanels(x,y,w)
+ Renderer.write(x,y,"Coming Soon",Theme.header)
+ Renderer.hLine(x,y+1,w,Theme.border)
 
- Renderer.write(area.x,area.y+11,"Time",Theme.muted)
- Renderer.write(area.x+18,area.y+11,Utils.time(),Theme.header)
+ Renderer.write(x,y+3,"Colony Requests",Theme.muted)
+ Renderer.write(x+22,y+3,"Pending",Theme.warning)
+
+ Renderer.write(x,y+5,"Crafting Jobs",Theme.muted)
+ Renderer.write(x+22,y+5,"Pending",Theme.warning)
+
+ Renderer.write(x,y+7,"Energy Stats",Theme.muted)
+ Renderer.write(x+22,y+7,"Pending",Theme.warning)
+
+ Renderer.write(x,y+9,"Touch Navigation",Theme.muted)
+ Renderer.write(x+22,y+9,"Next",Theme.good)
 end
 
 function Dashboard.render()
@@ -65,20 +83,22 @@ function Dashboard.render()
 
  Renderer.begin()
 
- local l=Layout.get()
- local items=Data.getTopItems(Config.topItems or 10)
+ local w,h=Renderer.getSize()
 
- Renderer.box(l.border.x,l.border.y,l.border.w,l.border.h,Theme.border)
+ Renderer.box(1,1,w,h,Theme.border)
+ drawHeader(w)
+ drawNav(w)
 
- Renderer.center(2,Config.title,Theme.title)
- Renderer.hLine(3,5,l.screen.w-4,Theme.border)
+ local leftW=math.floor((w-10)*0.55)
+ local rightW=w-leftW-12
 
- drawTopItems(l.leftPanel,items)
- drawStats(l.rightPanel,ok,err)
+ drawStorageSummary(4,11,leftW)
+ drawSystemSummary(leftW+8,11,rightW,ok,err)
+ drawFuturePanels(leftW+8,25,rightW)
 
- Renderer.hLine(3,l.screen.h-2,l.screen.w-4,Theme.border)
- Renderer.write(4,l.screen.h-1,"Dashboard running",Theme.good)
- Renderer.write(l.screen.w-25,l.screen.h-1,"Refresh: "..tostring(Config.refreshRate).."s",Theme.muted)
+ Renderer.hLine(3,h-2,w-4,Theme.border)
+ Renderer.write(4,h-1,"Home Dashboard Ready",Theme.good)
+ Renderer.write(w-30,h-1,"Next: Sub Pages",Theme.muted)
 
  Renderer.endFrame()
 end
