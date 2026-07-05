@@ -1,79 +1,31 @@
-local Loader = dofile("loader.lua")
-
-local Data = Loader.load("lib.data")
-local Renderer = Loader.load("lib.renderer")
-local Utils = Loader.load("lib.utils")
-local Theme = Loader.load("lib.theme")
-
-local TableWidget = Loader.load("widgets.table")
-
-local Dashboard = {}
-
---------------------------------------------------
--- Draw header
---------------------------------------------------
-
+local Loader=dofile("loader.lua")
+local Data=Loader.load("lib.data")
+local Renderer=Loader.load("lib.renderer")
+local Utils=Loader.load("lib.utils")
+local Theme=Loader.load("lib.theme")
+local TableWidget=Loader.load("widgets.table")
+local Dashboard={}
 local function drawHeader()
-
-    local w, _ = Renderer.getSize()
-
-    Renderer.write(2, 1, "Silicon Reach ME Dashboard", Theme.title)
-
-    local time = Utils.currentTime()
-
-    Renderer.write(w - #time - 2, 1, time, Theme.highlight)
-
+local w,h=Renderer.getSize()
+Renderer.write(2,1,"Silicon Reach ME Dashboard",Theme.title)
+Renderer.write(2,2,"If you can read this, renderer works",Theme.good)
 end
-
---------------------------------------------------
--- Draw footer
---------------------------------------------------
-
-local function drawFooter()
-
-    local w, h = Renderer.getSize()
-
-    local count = Data.getItemCount()
-    local last = math.floor((os.epoch("utc") - Data.getLastUpdate()) / 1000)
-
-    local footer = "Items: " .. count .. " | Updated: " .. last .. "s ago"
-
-    Renderer.write(2, h, footer, Theme.text)
-
-end
-
---------------------------------------------------
--- Draw main content
---------------------------------------------------
-
 local function drawContent()
-
-    local w, h = Renderer.getSize()
-
-    local topItems = Data.getTopItems(10)
-
-    TableWidget.draw(2, 3, w - 4, h - 5, topItems)
-
+local w,h=Renderer.getSize()
+local ok=Data.update()
+Renderer.write(2,4,"Data update: "..tostring(ok),ok and Theme.good or Theme.bad)
+Renderer.write(2,5,"Item count: "..tostring(Data.getItemCount()),Theme.text)
+local topItems=Data.getTopItems(10)
+if #topItems==0 then
+Renderer.write(2,7,"No items found from ME bridge",Theme.bad)
+else
+TableWidget.draw(2,7,w-4,math.min(10,h-8),topItems)
 end
-
---------------------------------------------------
--- MAIN RENDER FUNCTION
---------------------------------------------------
-
+end
 function Dashboard.render()
-
-    Data.update()
-
-    Renderer.begin()
-
-    drawHeader()
-
-    drawContent()
-
-    drawFooter()
-
-    Renderer.endFrame()
-
+Renderer.begin()
+drawHeader()
+drawContent()
+Renderer.endFrame()
 end
-
 return Dashboard
