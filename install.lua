@@ -20,7 +20,8 @@ local files={
     "lib/data.lua",
     "lib/renderer.lua",
     "lib/layout.lua",
-
+    
+    "pages/storage.lua",
     "pages/dashboard.lua",
 
     "widgets/table.lua"
