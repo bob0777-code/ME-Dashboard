@@ -83,18 +83,6 @@ end
 function Dashboard.render()
  local ok,err=Data.update()
 
- if currentPage=="storage" then
-  Storage.prepare()
- end
-
- if currentPage=="colony" then
-  Colony.prepare()
- end
-
- if currentPage=="crafting" then
-  Crafting.prepare()
- end
-
  Renderer.begin()
 
  local w,h=Renderer.getSize()
