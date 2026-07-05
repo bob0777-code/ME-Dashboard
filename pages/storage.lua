@@ -6,7 +6,7 @@ local Renderer=Loader.load("lib.renderer")
 local Storage={}
 
 local ITEM_LIMIT=2147480000
-local FLUID_LIMIT=2147480000000
+local FLUID_LIMIT=2147480000
 
 local cachedItems={}
 local cachedMaxedItems={}
