@@ -44,8 +44,8 @@ end
 local function addTrend(item)
  local previous=Data.previous[item.name] or item.amount
  local trend="="
- if item.amount>previous then trend="▲" end
- if item.amount<previous then trend="▼" end
+ if item.amount>previous then trend="+" end
+ if item.amount<previous then trend="-" end
  item.previous=previous
  item.trend=trend
  return item
