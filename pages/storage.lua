@@ -5,6 +5,9 @@ local Peripherals=Loader.load("lib.peripherals")
 local Renderer=Loader.load("lib.renderer")
 local Storage={}
 
+local cachedItems={}
+local cachedStats={energy=0,itemCap=0,fluidCap=0,cells=0,bytes=0,used=0}
+
 local function getItems()
  Peripherals.refresh()
  local me=Peripherals.me
@@ -34,12 +37,18 @@ local function getStats()
  return s
 end
 
+function Storage.prepare()
+ cachedItems=getItems()
+ cachedStats=getStats()
+end
+
 function Storage.draw(area)
- local stats=getStats()
- local items=getItems()
+ local stats=cachedStats
+ local items=cachedItems
  local leftW=58
  local rightX=area.x+leftW+4
  local rightW=area.w-leftW-4
+ local maxRows=math.min(#items,area.h-9)
  local rowColors={colors.red,colors.orange,colors.yellow,colors.lime,colors.green,colors.cyan,colors.lightBlue,colors.blue,colors.purple,colors.magenta}
 
  Renderer.write(area.x,area.y,"Storage Page",Theme.header)
@@ -52,7 +61,7 @@ function Storage.draw(area)
  Renderer.write(area.x+43,area.y+6,"Amount",Theme.header)
  Renderer.hLine(area.x,area.y+7,leftW,Theme.border)
 
- for i=1,math.min(20,#items) do
+ for i=1,maxRows do
   local item=items[i]
   local y=area.y+7+i
   local name=item.displayName or item.display_name or item.name or "Unknown"
