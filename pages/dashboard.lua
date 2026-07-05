@@ -11,56 +11,83 @@ local currentPage="home"
 
 local buttons={
  {name="Home",page="home",x=4},
- {name="Storage",page="storage",x=15},
- {name="Colony",page="colony",x=29},
- {name="Crafting",page="crafting",x=42},
- {name="Search",page="search",x=58},
- {name="Settings",page="settings",x=70}
+ {name="Storage",page="storage",x=16},
+ {name="Colony",page="colony",x=31},
+ {name="Crafting",page="crafting",x=45},
+ {name="Search",page="search",x=61},
+ {name="Settings",page="settings",x=74}
 }
 
-local function drawHeader(w)
+local function drawShell(w,h)
+ Renderer.box(1,1,w,h,Theme.border)
  Renderer.center(2,Config.getTitle(),Theme.title)
  Renderer.center(3,"Applied Energistics Control Center",Theme.header)
  Renderer.hLine(3,5,w-4,Theme.border)
-end
 
-local function drawNav()
- local y=7
  for _,b in ipairs(buttons) do
-  local text="[ "..b.name.." ]"
   local color=currentPage==b.page and Theme.good or Theme.header
-  Renderer.write(b.x,y,text,color)
+  Renderer.write(b.x,7,"[ "..b.name.." ]",color)
  end
+
+ Renderer.hLine(3,9,w-4,Theme.border)
 end
 
-local function drawHome(area,ok,err)
+local function drawHome(w,h,ok,err)
+ local leftX=4
+ local leftY=11
+ local leftW=48
+ local rightX=58
+ local rightY=11
+ local rightW=w-rightX-4
  local items=Data.getTopItems(5)
 
- Renderer.write(area.x,area.y,"Home Dashboard",Theme.header)
- Renderer.hLine(area.x,area.y+1,area.w,Theme.border)
+ Renderer.write(leftX,leftY,"Storage Overview",Theme.header)
+ Renderer.hLine(leftX,leftY+1,leftW,Theme.border)
 
- Renderer.write(area.x,area.y+3,"Unique Items",Theme.muted)
- Renderer.write(area.x+18,area.y+3,tostring(Data.getItemCount()),Theme.good)
+ Renderer.write(leftX,leftY+3,"Unique Items",Theme.muted)
+ Renderer.write(leftX+18,leftY+3,tostring(Data.getItemCount()),Theme.good)
 
- Renderer.write(area.x,area.y+5,"Status",Theme.muted)
- Renderer.write(area.x+18,area.y+5,ok and "Online" or "Error",ok and Theme.good or Theme.bad)
-
- Renderer.write(area.x,area.y+7,"Top Items",Theme.muted)
+ Renderer.write(leftX,leftY+5,"Top Items",Theme.muted)
 
  for i=1,math.min(5,#items) do
   local item=items[i]
-  Renderer.write(area.x,area.y+8+i,tostring(i)..". "..Utils.truncate(item.displayName or item.name,35),Theme.text)
-  Renderer.write(area.x+45,area.y+8+i,Utils.formatNumber(item.amount),Theme.header)
+  local y=leftY+6+i
+  Renderer.write(leftX,y,tostring(i)..". "..Utils.truncate(item.displayName or item.name,28),Theme.text)
+  Renderer.write(leftX+34,y,Utils.padLeft(Utils.formatNumber(item.amount or 0),10),Theme.header)
  end
 
- Renderer.write(area.x,area.y+16,"Use monitor touch or number keys:",Theme.muted)
- Renderer.write(area.x,area.y+18,"1 Home  2 Storage  3 Colony  4 Crafting  5 Search  6 Settings",Theme.header)
+ Renderer.write(rightX,rightY,"System Status",Theme.header)
+ Renderer.hLine(rightX,rightY+1,rightW,Theme.border)
+
+ Renderer.write(rightX,rightY+3,"ME Bridge",Theme.muted)
+ Renderer.write(rightX+20,rightY+3,ok and "Online" or "Error",ok and Theme.good or Theme.bad)
+
+ Renderer.write(rightX,rightY+5,"Refresh Rate",Theme.muted)
+ Renderer.write(rightX+20,rightY+5,tostring(Config.refreshRate).."s",Theme.header)
+
+ Renderer.write(rightX,rightY+7,"Current Time",Theme.muted)
+ Renderer.write(rightX+20,rightY+7,Utils.time(),Theme.header)
+
+ Renderer.write(rightX,rightY+13,"Coming Soon",Theme.header)
+ Renderer.hLine(rightX,rightY+14,rightW,Theme.border)
+
+ Renderer.write(rightX,rightY+16,"Colony Requests",Theme.muted)
+ Renderer.write(rightX+22,rightY+16,"Pending",Theme.warning)
+
+ Renderer.write(rightX,rightY+18,"Crafting Jobs",Theme.muted)
+ Renderer.write(rightX+22,rightY+18,"Pending",Theme.warning)
+
+ Renderer.write(rightX,rightY+20,"Energy Stats",Theme.muted)
+ Renderer.write(rightX+22,rightY+20,"Pending",Theme.warning)
+
+ Renderer.write(rightX,rightY+22,"Touch Navigation",Theme.muted)
+ Renderer.write(rightX+22,rightY+22,"Ready",Theme.good)
 end
 
-local function drawPlaceholder(area,title)
- Renderer.write(area.x,area.y,title,Theme.header)
- Renderer.hLine(area.x,area.y+1,area.w,Theme.border)
- Renderer.write(area.x,area.y+3,"This page is ready to build next.",Theme.warning)
+local function drawPlaceholder(title)
+ Renderer.write(4,11,title,Theme.header)
+ Renderer.hLine(4,12,80,Theme.border)
+ Renderer.write(4,14,"This page is ready to build next.",Theme.warning)
 end
 
 function Dashboard.render()
@@ -69,25 +96,20 @@ function Dashboard.render()
  Renderer.begin()
 
  local w,h=Renderer.getSize()
- local area={x=4,y=10,w=w-8,h=h-14}
-
- Renderer.box(1,1,w,h,Theme.border)
- drawHeader(w)
- drawNav()
- Renderer.hLine(3,9,w-4,Theme.border)
+ drawShell(w,h)
 
  if currentPage=="home" then
-  drawHome(area,ok,err)
+  drawHome(w,h,ok,err)
  elseif currentPage=="storage" then
-  Storage.draw(area)
+  Storage.draw({x=4,y=11,w=w-8,h=h-15})
  elseif currentPage=="colony" then
-  drawPlaceholder(area,"Colony Page")
+  drawPlaceholder("Colony Page")
  elseif currentPage=="crafting" then
-  drawPlaceholder(area,"Crafting Page")
+  drawPlaceholder("Crafting Page")
  elseif currentPage=="search" then
-  drawPlaceholder(area,"Search Page")
+  drawPlaceholder("Search Page")
  elseif currentPage=="settings" then
-  drawPlaceholder(area,"Settings Page")
+  drawPlaceholder("Settings Page")
  end
 
  Renderer.hLine(3,h-2,w-4,Theme.border)
