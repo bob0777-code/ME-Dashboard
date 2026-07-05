@@ -153,7 +153,7 @@ function Storage.draw(area)
   local fluid=maxedFluids[i]
   local color=rowColors[((i-1)%#rowColors)+1]
   Renderer.write(rightX,y,Utils.truncate(fluid.displayName,18),color)
-  Renderer.write(rightX+20,y,Utils.formatNumber(fluid.amount/1000000).."B",color)
+  Renderer.write(rightX+20,y,Utils.formatNumber(fluid.amount/1000).."B",color)
   y=y+1
  end
 end
