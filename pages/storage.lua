@@ -126,7 +126,7 @@ function Storage.draw(area)
  Renderer.write(rightX+16,area.y+10,Utils.formatNumber(stats.itemCap),Theme.header)
 
  Renderer.write(rightX,area.y+12,"Fluid Capacity",Theme.muted)
- Renderer.write(rightX+16,area.y+12,Utils.formatNumber((stats.fluidUsed or 0)/1000000).."/"..Utils.formatNumber((stats.fluidCap or 0)/1000000).."B",Theme.header)
+ Renderer.write(rightX+16,area.y+12,Utils.formatNumber((stats.fluidUsed or 0)/1000).."/"..Utils.formatNumber((stats.fluidCap or 0)/1000).." Buckets",Theme.header)
 
  Renderer.write(rightX,area.y+14,"Stored Energy",Theme.muted)
  Renderer.write(rightX+16,area.y+14,Utils.formatNumber(stats.energy),Theme.header)
@@ -153,7 +153,7 @@ function Storage.draw(area)
   local fluid=maxedFluids[i]
   local color=rowColors[((i-1)%#rowColors)+1]
   Renderer.write(rightX,y,Utils.truncate(fluid.displayName,18),color)
-  Renderer.write(rightX+20,y,Utils.formatNumber(fluid.amount/1000).."B",color)
+  Renderer.write(rightX+20,y,Utils.formatNumber(fluid.amount/1000).." Buckets",color)
   y=y+1
  end
 end
