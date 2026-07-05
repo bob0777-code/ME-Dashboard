@@ -1,5 +1,7 @@
-local Peripherals = dofile("loader.lua").load("lib.peripherals")
-local Theme = dofile("loader.lua").load("lib.theme")
+local Loader = dofile("loader.lua")
+
+local Peripherals = Loader.load("lib.peripherals")
+local Theme = Loader.load("lib.theme")
 
 local Renderer = {}
 
@@ -7,11 +9,12 @@ local Renderer = {}
 -- Screen state
 --------------------------------------------------
 
-local buffer = {}
-local oldBuffer = {}
+local monitor = Peripherals.monitor or term
 
 local width, height = 0, 0
-local monitor = Peripherals.monitor or term
+
+local buffer = {}
+local oldBuffer = {}
 
 --------------------------------------------------
 -- Init
@@ -33,7 +36,53 @@ function Renderer.init()
 end
 
 --------------------------------------------------
--- Internal: set cell
+-- FRAME CONTROL
+--------------------------------------------------
+
+function Renderer.begin()
+
+    buffer = {}
+
+end
+
+function Renderer.endFrame()
+
+    local function setPixel(x, y, cell)
+
+        monitor.setCursorPos(x, y)
+
+        if cell then
+            monitor.setTextColor(cell.color)
+            monitor.write(cell.char)
+        else
+            monitor.setTextColor(Theme.background)
+            monitor.write(" ")
+        end
+
+    end
+
+    for y = 1, height do
+
+        for x = 1, width do
+
+            local new = buffer[y] and buffer[y][x]
+            local old = oldBuffer[y] and oldBuffer[y][x]
+
+            if new ~= old then
+                setPixel(x, y, new)
+
+                oldBuffer[y] = oldBuffer[y] or {}
+                oldBuffer[y][x] = new
+            end
+
+        end
+
+    end
+
+end
+
+--------------------------------------------------
+-- Drawing
 --------------------------------------------------
 
 local function setCell(x, y, char, color)
@@ -47,10 +96,6 @@ local function setCell(x, y, char, color)
 
 end
 
---------------------------------------------------
--- Write text
---------------------------------------------------
-
 function Renderer.write(x, y, text, color)
 
     text = tostring(text)
@@ -58,56 +103,6 @@ function Renderer.write(x, y, text, color)
     for i = 1, #text do
         setCell(x + i - 1, y, text:sub(i, i), color)
     end
-
-end
-
---------------------------------------------------
--- Clear buffer
---------------------------------------------------
-
-function Renderer.clear()
-
-    buffer = {}
-
-end
-
---------------------------------------------------
--- Draw full frame
---------------------------------------------------
-
-function Renderer.render()
-
-    local changed = false
-
-    for y = 1, height do
-        for x = 1, width do
-
-            local new = buffer[y] and buffer[y][x]
-            local old = oldBuffer[y] and oldBuffer[y][x]
-
-            if new ~= old then
-
-                monitor.setCursorPos(x, y)
-
-                if new then
-                    monitor.setTextColor(new.color)
-                    monitor.write(new.char)
-                else
-                    monitor.setTextColor(Theme.background)
-                    monitor.write(" ")
-                end
-
-                changed = true
-
-                oldBuffer[y] = oldBuffer[y] or {}
-                oldBuffer[y][x] = new
-
-            end
-
-        end
-    end
-
-    return changed
 
 end
 
