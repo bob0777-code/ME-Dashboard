@@ -2,12 +2,12 @@ local Loader=dofile("loader.lua")
 local Peripherals=Loader.load("lib.peripherals")
 local Utils=Loader.load("lib.utils")
 
-Data.stats={}
-
 local Data={}
+
 Data.items={}
 Data.previous={}
 Data.lookup={}
+Data.stats={}
 Data.lastUpdate=0
 
 local function safeLower(value)
@@ -26,16 +26,8 @@ end
 local function isFiltered(item)
  local name=safeLower(item.name)
  local filters={
-  "pattern",
-  "terminal",
-  "storage_cell",
-  "storage_component",
-  "spatial",
-  "facade",
-  "cable",
-  "drive",
-  "p2p",
-  "memory_card"
+  "pattern","terminal","storage_cell","storage_component",
+  "spatial","facade","cable","drive","p2p","memory_card"
  }
  for _,filter in ipairs(filters) do
   if string.find(name,filter,1,true) then return true end
@@ -51,6 +43,35 @@ local function addTrend(item)
  item.previous=previous
  item.trend=trend
  return item
+end
+
+local function safeCall(fn)
+ if type(fn)~="function" then return nil end
+ local ok,result=pcall(fn)
+ if ok then return result end
+ return nil
+end
+
+local function updateStats()
+ Data.stats={}
+
+ if not Peripherals.me then return end
+
+ Data.stats.energy=safeCall(function()
+  return Peripherals.me.getStoredEnergy()
+ end)
+
+ Data.stats.itemStorage=safeCall(function()
+  return Peripherals.me.getTotalItemStorage()
+ end)
+
+ Data.stats.fluidStorage=safeCall(function()
+  return Peripherals.me.getTotalFluidStorage()
+ end)
+
+ Data.stats.cells=safeCall(function()
+  return Peripherals.me.getCells()
+ end)
 end
 
 function Data.update()
@@ -88,30 +109,9 @@ function Data.update()
  end
 
  Utils.sortByAmount(Data.items)
+ updateStats()
  Data.lastUpdate=os.epoch("utc")
 
- Data.stats={}
-
-if Peripherals.me.getStoredEnergy then
- local okEnergy,energy=pcall(function() return Peripherals.me.getStoredEnergy() end)
- if okEnergy then Data.stats.energy=energy end
-end
-
-if Peripherals.me.getTotalItemStorage then
- local okItems,itemStorage=pcall(function() return Peripherals.me.getTotalItemStorage() end)
- if okItems then Data.stats.itemStorage=itemStorage end
-end
-
-if Peripherals.me.getTotalFluidStorage then
- local okFluids,fluidStorage=pcall(function() return Peripherals.me.getTotalFluidStorage() end)
- if okFluids then Data.stats.fluidStorage=fluidStorage end
-end
-
-if Peripherals.me.getCells then
- local okCells,cells=pcall(function() return Peripherals.me.getCells() end)
- if okCells then Data.stats.cells=cells end
-end
- 
  return true,nil
 end
 
@@ -132,6 +132,10 @@ function Data.getLastUpdate()
  return Data.lastUpdate
 end
 
+function Data.getStats()
+ return Data.stats or {}
+end
+
 function Data.search(text)
  local result={}
  text=safeLower(text)
@@ -141,10 +145,6 @@ function Data.search(text)
   end
  end
  return result
-end
-
-function Data.getStats()
- return Data.stats or {}
 end
 
 return Data
