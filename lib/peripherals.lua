@@ -1,19 +1,29 @@
-local Peripherals = {}
+local Peripherals={}
 
-Peripherals.colony = peripheral.find("colony_integrator")
-Peripherals.monitor = peripheral.find("monitor")
-Peripherals.me = peripheral.find("me_bridge")
-Peripherals.stash = peripheral.find("minecolonies:stash")
+Peripherals.colony=peripheral.find("colony_integrator")
+Peripherals.monitor=peripheral.find("monitor")
+Peripherals.me=peripheral.find("me_bridge")
+Peripherals.stash=peripheral.find("minecolonies:stash")
+
+function Peripherals.refresh()
+
+    Peripherals.colony=peripheral.find("colony_integrator")
+    Peripherals.monitor=peripheral.find("monitor")
+    Peripherals.me=peripheral.find("me_bridge")
+    Peripherals.stash=peripheral.find("minecolonies:stash")
+
+end
 
 function Peripherals.verify()
 
-    if not Peripherals.monitor then
-        error("Monitor not found")
-    end
+    local status={}
 
-    if not Peripherals.me then
-        error("ME Bridge not found")
-    end
+    status.me=Peripherals.me~=nil
+    status.monitor=Peripherals.monitor~=nil
+    status.colony=Peripherals.colony~=nil
+    status.stash=Peripherals.stash~=nil
+
+    return status
 
 end
 
