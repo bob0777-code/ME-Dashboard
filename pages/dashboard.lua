@@ -5,8 +5,9 @@ local Utils=Loader.load("lib.utils")
 local Data=Loader.load("lib.data")
 local Renderer=Loader.load("lib.renderer")
 local Storage=Loader.load("pages.storage")
-local Version=Loader.load("version")
 local Colony=Loader.load("pages.colony")
+local Crafting=Loader.load("pages.crafting")
+local Version=Loader.load("version")
 
 local Dashboard={}
 local currentPage="home"
@@ -71,20 +72,20 @@ local function drawHome(w,h,ok,err)
  Renderer.write(rightX,rightY+7,"Current Time",Theme.muted)
  Renderer.write(rightX+20,rightY+7,Utils.time(),Theme.header)
 
- Renderer.write(rightX,rightY+13,"Coming Soon",Theme.header)
+ Renderer.write(rightX,rightY+13,"Page Progress",Theme.header)
  Renderer.hLine(rightX,rightY+14,rightW,Theme.border)
 
- Renderer.write(rightX,rightY+16,"Colony Requests",Theme.muted)
- Renderer.write(rightX+22,rightY+16,"Pending",Theme.warning)
+ Renderer.write(rightX,rightY+16,"Home",Theme.muted)
+ Renderer.write(rightX+22,rightY+16,"Done",Theme.good)
 
- Renderer.write(rightX,rightY+18,"Crafting Jobs",Theme.muted)
- Renderer.write(rightX+22,rightY+18,"Pending",Theme.warning)
+ Renderer.write(rightX,rightY+18,"Storage",Theme.muted)
+ Renderer.write(rightX+22,rightY+18,"Done",Theme.good)
 
- Renderer.write(rightX,rightY+20,"Energy Stats",Theme.muted)
- Renderer.write(rightX+22,rightY+20,"Pending",Theme.warning)
+ Renderer.write(rightX,rightY+20,"Colony",Theme.muted)
+ Renderer.write(rightX+22,rightY+20,"Done",Theme.good)
 
- Renderer.write(rightX,rightY+22,"Touch Navigation",Theme.muted)
- Renderer.write(rightX+22,rightY+22,"Ready",Theme.good)
+ Renderer.write(rightX,rightY+22,"Crafting",Theme.muted)
+ Renderer.write(rightX+22,rightY+22,"Done",Theme.good)
 end
 
 local function drawPlaceholder(title)
@@ -101,11 +102,15 @@ function Dashboard.render()
  end
 
  if currentPage=="colony" then
- Colony.prepare()
+  Colony.prepare()
  end
- 
+
+ if currentPage=="crafting" then
+  Crafting.prepare()
+ end
+
  Renderer.begin()
- 
+
  local w,h=Renderer.getSize()
  drawShell(w,h)
 
@@ -116,7 +121,7 @@ function Dashboard.render()
  elseif currentPage=="colony" then
   Colony.draw({x=4,y=11,w=w-8,h=h-15})
  elseif currentPage=="crafting" then
-  drawPlaceholder("Crafting Page")
+  Crafting.draw({x=4,y=11,w=w-8,h=h-15})
  elseif currentPage=="search" then
   drawPlaceholder("Search Page")
  elseif currentPage=="settings" then
