@@ -34,45 +34,40 @@ local function getStats()
  return s
 end
 
-local function divider(x,y,w)
- Renderer.hLine(x,y,w,Theme.border)
-end
-
 function Storage.draw(area)
  local stats=getStats()
  local items=getItems()
  local leftW=58
  local rightX=area.x+leftW+4
  local rightW=area.w-leftW-4
+ local rowColors={colors.red,colors.orange,colors.yellow,colors.lime,colors.green,colors.cyan,colors.lightBlue,colors.blue,colors.purple,colors.magenta}
 
  Renderer.write(area.x,area.y,"Storage Page",Theme.header)
- divider(area.x,area.y+1,area.w)
+ Renderer.hLine(area.x,area.y+1,area.w,Theme.border)
 
  Renderer.write(area.x,area.y+3,"Top Stored Items",Theme.header)
- divider(area.x,area.y+4,leftW)
-
+ Renderer.hLine(area.x,area.y+4,leftW,Theme.border)
  Renderer.write(area.x,area.y+6,"#",Theme.header)
- Renderer.write(area.x+5,area.y+6,"Item",Theme.header)
+ Renderer.write(area.x+6,area.y+6,"Item",Theme.header)
  Renderer.write(area.x+43,area.y+6,"Amount",Theme.header)
- divider(area.x,area.y+7,leftW)
+ Renderer.hLine(area.x,area.y+7,leftW,Theme.border)
 
  for i=1,math.min(20,#items) do
   local item=items[i]
   local y=area.y+7+i
   local name=item.displayName or item.display_name or item.name or "Unknown"
   local amount=tonumber(item.amount or item.count) or 0
-  local color=Theme.text
-  if i%2==0 then color=colors.lightGray end
+  local rowColor=rowColors[((i-1)%#rowColors)+1]
 
-  Renderer.write(area.x,y,Utils.padLeft(i..".",3),color)
+  Renderer.write(area.x,y,Utils.padLeft(i..".",3),rowColor)
   Renderer.write(area.x+4,y,"|",Theme.border)
-  Renderer.write(area.x+6,y,Utils.padRight(Utils.truncate(name,32),32),color)
+  Renderer.write(area.x+6,y,Utils.padRight(Utils.truncate(name,32),32),rowColor)
   Renderer.write(area.x+39,y,"|",Theme.border)
-  Renderer.write(area.x+42,y,Utils.padLeft(Utils.formatNumber(amount),12),Theme.header)
+  Renderer.write(area.x+42,y,Utils.padLeft(Utils.formatNumber(amount),12),rowColor)
  end
 
  Renderer.write(rightX,area.y+3,"ME Storage Stats",Theme.header)
- divider(rightX,area.y+4,rightW)
+ Renderer.hLine(rightX,area.y+4,rightW,Theme.border)
 
  Renderer.write(rightX,area.y+6,"Cell Bytes",Theme.muted)
  Renderer.write(rightX+16,area.y+6,Utils.bar(stats.used,stats.bytes,24),Theme.good)
