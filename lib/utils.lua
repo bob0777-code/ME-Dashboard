@@ -39,4 +39,14 @@ function Utils.time()
  return textutils.formatTime(os.time(),true)
 end
 
+function Utils.bar(value,max,width)
+ value=tonumber(value) or 0
+ max=tonumber(max) or 1
+ if max<=0 then max=1 end
+ local filled=math.floor((value/max)*width)
+ if filled<0 then filled=0 end
+ if filled>width then filled=width end
+ return string.rep("#",filled)..string.rep("-",width-filled)
+end
+
 return Utils
