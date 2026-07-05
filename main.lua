@@ -1,72 +1,57 @@
-local Loader=dofile("loader.lua")
+local Loader = dofile("loader.lua")
 
-local Version=Loader.load("version")
+local Peripherals = Loader.load("lib.peripherals")
+local Renderer = Loader.load("lib.renderer")
+local Config = Loader.load("lib.config")
 
-local Config=Loader.load("lib.config")
+local Dashboard = Loader.load("pages.dashboard")
 
-local Theme=Loader.load("lib.theme")
-
-local Peripherals=Loader.load("lib.peripherals")
+--------------------------------------------------
+-- INIT
+--------------------------------------------------
 
 Peripherals.refresh()
+Peripherals.verify()
 
-local status=Peripherals.verify()
+Renderer.init()
 
-local monitor=Peripherals.monitor or term
+--------------------------------------------------
+-- SAFE LOOP
+--------------------------------------------------
 
-monitor.setBackgroundColor(Theme.background)
-monitor.setTextColor(Theme.text)
+local function safeRun(fn)
 
-if monitor.clear then monitor.clear() end
+    local ok, err = pcall(fn)
 
-if monitor.setTextScale then
-    monitor.setTextScale(Config.textScale)
-end
+    if not ok then
 
-monitor.setCursorPos(2,2)
-monitor.setTextColor(Theme.title)
-monitor.write(Version.name)
+        Renderer.begin()
 
-monitor.setCursorPos(2,3)
-monitor.setTextColor(Theme.highlight)
-monitor.write("Version "..Version.version)
+        local w, h = Renderer.getSize()
 
-monitor.setCursorPos(2,5)
-monitor.setTextColor(Theme.text)
-monitor.write("Status")
+        Renderer.write(2, 2, "ERROR", colors.red)
+        Renderer.write(2, 4, tostring(err), colors.white)
 
-monitor.setCursorPos(2,6)
-monitor.write("---------------------")
+        Renderer.endFrame()
 
-local function drawStatus(name,value,row)
+        sleep(5)
 
-    monitor.setCursorPos(2,row)
-
-    monitor.setTextColor(Theme.text)
-
-    monitor.write(name)
-
-    monitor.setCursorPos(20,row)
-
-    if value then
-        monitor.setTextColor(Theme.good)
-        monitor.write("OK")
-    else
-        monitor.setTextColor(Theme.bad)
-        monitor.write("Missing")
     end
 
 end
 
-drawStatus("ME Bridge",status.me,7)
-drawStatus("Monitor",status.monitor,8)
-drawStatus("Colony",status.colony,9)
-drawStatus("Stash",status.stash,10)
-
-monitor.setCursorPos(2,12)
-monitor.setTextColor(Theme.highlight)
-monitor.write("Waiting for data...")
+--------------------------------------------------
+-- MAIN LOOP
+--------------------------------------------------
 
 while true do
+
+    safeRun(function()
+
+        Dashboard.render()
+
+    end)
+
     sleep(Config.refreshRate)
+
 end
