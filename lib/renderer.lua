@@ -2,6 +2,7 @@ local Loader=dofile("loader.lua")
 local Peripherals=Loader.load("lib.peripherals")
 local Theme=Loader.load("lib.theme")
 local Config=Loader.load("lib.config")
+
 local Renderer={}
 local monitor=nil
 local width=0
