@@ -2,13 +2,12 @@ local Theme={}
 
 Theme.background=colors.black
 Theme.text=colors.white
+Theme.muted=colors.gray
 Theme.title=colors.cyan
-Theme.border=colors.gray
-
+Theme.header=colors.lightBlue
 Theme.good=colors.lime
 Theme.warning=colors.yellow
 Theme.bad=colors.red
-
-Theme.highlight=colors.lightBlue
+Theme.border=colors.gray
 
 return Theme
