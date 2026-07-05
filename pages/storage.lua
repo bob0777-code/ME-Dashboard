@@ -1,70 +1,21 @@
 local Loader=dofile("loader.lua")
 local Theme=Loader.load("lib.theme")
 local Utils=Loader.load("lib.utils")
-local Peripherals=Loader.load("lib.peripherals")
+local Data=Loader.load("lib.data")
 local Renderer=Loader.load("lib.renderer")
 local Storage={}
 
-local cachedItems={}
-local cachedStats={energy=0,itemCap=0,fluidCap=0,cells=0,bytes=0,used=0}
-
 local rowColors={colors.red,colors.orange,colors.yellow,colors.lime,colors.green,colors.cyan,colors.lightBlue,colors.blue,colors.purple,colors.magenta}
 
-local function getItems()
- Peripherals.refresh()
- local me=Peripherals.me
- if not me or type(me.getItems)~="function" then return {} end
- local ok,items=pcall(function() return me.getItems() end)
- if not ok or type(items)~="table" then return {} end
- table.sort(items,function(a,b) return (tonumber(a.amount or a.count) or 0)>(tonumber(b.amount or b.count) or 0) end)
- return items
-end
-
-local function getStats()
- Peripherals.refresh()
- local me=Peripherals.me
- local s={energy=0,itemCap=0,fluidCap=0,cells=0,bytes=0,used=0}
- if not me then return s end
-
- local ok,e=pcall(function() return me.getStoredEnergy() end)
- if ok then s.energy=tonumber(e) or 0 end
-
- local ok2,i=pcall(function() return me.getTotalItemStorage() end)
- if ok2 then s.itemCap=tonumber(i) or 0 end
-
- local ok3,f=pcall(function() return me.getTotalFluidStorage() end)
- if ok3 then s.fluidCap=tonumber(f) or 0 end
-
- local ok4,c=pcall(function() return me.getCells() end)
- if ok4 and type(c)=="table" then
-  s.cells=#c
-  for _,cell in ipairs(c) do
-   if type(cell)=="table" then
-    s.bytes=s.bytes+(tonumber(cell.bytes) or 0)
-    s.used=s.used+(tonumber(cell.usedBytes) or 0)
-   end
-  end
- end
-local ok5,fluids=pcall(function() return me.getFluids() end)
-if ok5 and type(fluids)=="table" then
- s.fluidUsed=0
- for _,fluid in ipairs(fluids) do
-  if type(fluid)=="table" then
-   s.fluidUsed=s.fluidUsed+(tonumber(fluid.amount or fluid.count) or 0)
-  end
- end
-end
- return s
-end
-
 function Storage.prepare()
- cachedItems=getItems()
- cachedStats=getStats()
 end
 
 function Storage.draw(area)
- local stats=cachedStats
- local items=cachedItems
+ local stats=Data.getStats()
+ local items=Data.getTopItems(999)
+ local maxedItems=Data.getMaxedItems()
+ local maxedFluids=Data.getMaxedFluids()
+
  local leftW=58
  local rightX=area.x+leftW+4
  local rightW=area.w-leftW-4
@@ -98,11 +49,9 @@ function Storage.draw(area)
  Renderer.write(rightX,area.y+3,"ME Storage Stats",Theme.header)
  Renderer.hLine(rightX,area.y+4,rightW,Theme.border)
 
- local barW=math.max(5,math.min(10,rightW-34))
-
  Renderer.write(rightX,area.y+6,"Cell Bytes",Theme.muted)
- Renderer.write(rightX+16,area.y+6,Utils.bar(stats.used,stats.bytes,barW),Theme.good)
- Renderer.write(rightX+18+barW,area.y+6,Utils.formatNumber(stats.used).."/"..Utils.formatNumber(stats.bytes),Theme.header)
+ Renderer.write(rightX+16,area.y+6,Utils.bar(stats.used,stats.bytes,10),Theme.good)
+ Renderer.write(rightX+28,area.y+6,Utils.formatNumber(stats.used).."/"..Utils.formatNumber(stats.bytes),Theme.header)
 
  Renderer.write(rightX,area.y+8,"Storage Cells",Theme.muted)
  Renderer.write(rightX+16,area.y+8,tostring(stats.cells),Theme.good)
@@ -111,10 +60,36 @@ function Storage.draw(area)
  Renderer.write(rightX+16,area.y+10,Utils.formatNumber(stats.used).."/"..Utils.formatNumber(stats.itemCap),Theme.header)
 
  Renderer.write(rightX,area.y+12,"Fluid Capacity",Theme.muted)
- Renderer.write(rightX+16,area.y+12,Utils.formatNumber((stats.fluidUsed or 0)/1000000).."/"..Utils.formatNumber((stats.fluidCap or 0)/1000000).."B",Theme.header)
+ Renderer.write(rightX+16,area.y+12,Utils.formatNumber((stats.fluidUsed or 0)/1000).."/"..Utils.formatNumber((stats.fluidCap or 0)/1000).."mB",Theme.header)
 
  Renderer.write(rightX,area.y+14,"Stored Energy",Theme.muted)
  Renderer.write(rightX+16,area.y+14,Utils.formatNumber(stats.energy),Theme.header)
+
+ local limitY=area.y+17
+ Renderer.write(rightX,limitY,"Integer Limit Values",Theme.warning)
+ Renderer.hLine(rightX,limitY+1,rightW,Theme.border)
+
+ local y=limitY+3
+ Renderer.write(rightX,y,"Items",Theme.header)
+ y=y+1
+
+ for i=1,math.min(4,#maxedItems) do
+  local item=maxedItems[i]
+  Renderer.write(rightX,y,Utils.truncate(item.displayName or item.name,18),rowColors[((i-1)%#rowColors)+1])
+  Renderer.write(rightX+20,y,Utils.formatNumber(item.amount),rowColors[((i-1)%#rowColors)+1])
+  y=y+1
+ end
+
+ y=y+1
+ Renderer.write(rightX,y,"Fluids",Theme.header)
+ y=y+1
+
+ for i=1,math.min(4,#maxedFluids) do
+  local fluid=maxedFluids[i]
+  Renderer.write(rightX,y,Utils.truncate(fluid.displayName or fluid.name,18),rowColors[((i-1)%#rowColors)+1])
+  Renderer.write(rightX+20,y,Utils.formatNumber(fluid.amount/1000).."mB",rowColors[((i-1)%#rowColors)+1])
+  y=y+1
+ end
 end
 
 return Storage
