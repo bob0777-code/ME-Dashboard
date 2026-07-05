@@ -9,9 +9,18 @@ Data.lookup={}
 Data.stats={}
 Data.lastUpdate=0
 
-local function safeLower(value)
- if type(value)~="string" then return "" end
- return string.lower(value)
+local function safeLower(v)
+ if type(v)~="string" then return "" end
+ return string.lower(v)
+end
+
+local function callMe(name)
+ if not Peripherals.me then return nil end
+ local fn=Peripherals.me[name]
+ if type(fn)~="function" then return nil end
+ local ok,result=pcall(function() return fn() end)
+ if ok then return result end
+ return nil
 end
 
 local function normaliseItem(item)
@@ -25,38 +34,31 @@ end
 local function isFiltered(item)
  local name=safeLower(item.name)
  local filters={"pattern","terminal","storage_cell","storage_component","spatial","facade","cable","drive","p2p","memory_card"}
- for _,filter in ipairs(filters) do
-  if string.find(name,filter,1,true) then return true end
+ for _,f in ipairs(filters) do
+  if string.find(name,f,1,true) then return true end
  end
  return false
 end
 
 local function addTrend(item)
- local previous=Data.previous[item.name] or item.amount
- local trend="="
- if item.amount>previous then trend="+" end
- if item.amount<previous then trend="-" end
- item.previous=previous
- item.trend=trend
+ local old=Data.previous[item.name] or item.amount
+ item.previous=old
+ item.trend="="
+ if item.amount>old then item.trend="+" end
+ if item.amount<old then item.trend="-" end
  return item
 end
 
-local function safeCall(fn)
- local ok,result=pcall(fn)
- if ok then return result end
- return nil
-end
-
 local function updateStats()
- Data.stats={energy=0,itemCapacity=0,fluidCapacity=0,cellBytes=0,cellUsedBytes=0,cellCount=0}
-
- if not Peripherals.me then return end
-
- Data.stats.energy=safeCall(function() return Peripherals.me.getStoredEnergy() end) or 0
- Data.stats.itemCapacity=safeCall(function() return Peripherals.me.getTotalItemStorage() end) or 0
- Data.stats.fluidCapacity=safeCall(function() return Peripherals.me.getTotalFluidStorage() end) or 0
-
- local cells=safeCall(function() return Peripherals.me.getCells() end)
+ local cells=callMe("getCells")
+ Data.stats={
+  energy=tonumber(callMe("getStoredEnergy")) or 0,
+  itemCapacity=tonumber(callMe("getTotalItemStorage")) or 0,
+  fluidCapacity=tonumber(callMe("getTotalFluidStorage")) or 0,
+  cellCount=0,
+  cellBytes=0,
+  cellUsedBytes=0
+ }
 
  if type(cells)=="table" then
   Data.stats.cellCount=#cells
@@ -72,8 +74,8 @@ end
 function Data.update()
  Peripherals.refresh()
 
- if not Peripherals.me or type(Peripherals.me.getItems)~="function" then
-  return false,"ME bridge missing getItems()"
+ if not Peripherals.me then
+  return false,"ME bridge missing"
  end
 
  Data.previous={}
@@ -84,8 +86,7 @@ function Data.update()
  Data.items={}
  Data.lookup={}
 
- local ok,raw=pcall(function() return Peripherals.me.getItems() end)
- if not ok then return false,raw end
+ local raw=callMe("getItems")
  if type(raw)~="table" then raw={} end
 
  for _,rawItem in ipairs(raw) do
@@ -112,8 +113,8 @@ function Data.getTopItems(limit)
 end
 
 function Data.getItemCount() return #Data.items end
-function Data.getLastUpdate() return Data.lastUpdate end
 function Data.getStats() return Data.stats or {} end
+function Data.getLastUpdate() return Data.lastUpdate end
 
 function Data.search(text)
  local result={}
