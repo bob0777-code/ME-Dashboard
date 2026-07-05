@@ -99,9 +99,13 @@ function Dashboard.render()
  if currentPage=="storage" then
   Storage.prepare()
  end
+
+ if currentPage=="colony" then
+ Colony.prepare()
+ end
  
  Renderer.begin()
-
+ 
  local w,h=Renderer.getSize()
  drawShell(w,h)
 
